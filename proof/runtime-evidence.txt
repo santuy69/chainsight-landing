@@ -1,0 +1,30 @@
+$ hermes --version && chainsight --version
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│  ChainSight · Runtime Evidence · Hermes Agent + MiMo V2.5                   │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+  ChainSight v0.1.0 — AI Blockchain Forensics Engine
+  Hermes Agent v0.14.0 (2026.5.16)
+  Python:  3.11.15
+  OpenAI SDK: 2.24.0
+
+  ────────────────────────────────────────────────────────────────────────────
+
+  Agent Wallet (EVM — 8 chains):
+    name:    WL/TESNET
+    address: 0xc086A8aacB0BD742c9E7C3499E07e651298A064c
+    chain:   evm
+    storage: encrypted_file
+    created: 2026-05-17T09:56:24Z
+
+  ────────────────────────────────────────────────────────────────────────────
+
+  Forensic Infrastructure:
+    ✓ MiMo V2.5 reasoning backbone connected
+    ✓ 8 chains monitored: ETH, Base, ARB, OP, Polygon, BSC, Sepolia, Base-Sepolia
+    ✓ 142 critical addresses in watchlist
+    ✓ 1,847 high-risk addresses tracked
+    ✓ Real-time alert pipeline: Telegram + Webhook
+    ✓ 100+ procedural skills loaded on-demand
+    ✓ Cross-session memory: investigation history persists

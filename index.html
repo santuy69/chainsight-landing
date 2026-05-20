@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChainSight — AI Blockchain Forensics</title>
+<meta name="description" content="ChainSight: AI-powered blockchain forensics. Trace fund flows, detect suspicious patterns, generate compliance reports. Powered by MiMo V2.5.">
+<meta property="og:title" content="ChainSight — AI Blockchain Forensics">
+<meta property="og:description" content="See through the chain. AI-powered fund tracing, pattern detection, compliance reports.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07080c;--bg-2:#0b0d14;--surface:#10131c;--surface-2:#161a26;
+  --line:#1a1f2e;--line-2:#252b3d;
+  --ink:#eef0f6;--ink-2:#a8adc0;--muted:#5c6278;
+  --accent:#00ffc8;--accent-2:#00b4d8;--warn:#ff4757;--orange:#ff9f43;
+  --green:#00e89d;--blue:#4da6ff;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);background:rgba(7,8,12,.88);border-bottom:1px solid var(--line);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-family:var(--mono);font-weight:600;font-size:1rem;color:var(--accent);letter-spacing:-.02em}
+.nav-brand span{color:var(--muted);font-weight:400}
+.nav-links{display:flex;gap:1.5rem;font-size:.8rem;font-family:var(--mono);color:var(--muted)}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{background:var(--accent);color:var(--bg);padding:.4rem 1rem;border-radius:4px;font-family:var(--mono);font-size:.75rem;font-weight:600}
+
+/* HERO */
+.hero{position:relative;min-height:100vh;display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;padding:6rem 3rem 4rem;overflow:hidden}
+.hero-text{max-width:600px}
+.eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.7rem;color:var(--warn);background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);padding:.3rem .8rem;border-radius:99px;margin-bottom:1.5rem}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--warn);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font-size:clamp(2.5rem,5.5vw,4.2rem);font-weight:700;letter-spacing:-.03em;line-height:1.08;margin-bottom:1.2rem}
+h1 .accent{background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h1 .warn{color:var(--warn)}
+.hero-lede{font-size:1.05rem;color:var(--ink-2);max-width:480px;margin-bottom:2rem;line-height:1.65}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{background:var(--accent);color:var(--bg);padding:.65rem 1.6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-primary:hover{box-shadow:0 0 24px rgba(0,255,200,.3);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--ink-2);padding:.65rem 1.6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;border:1px solid var(--line-2);cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+
+/* HERO VISUAL */
+.hero-visual{position:relative;width:100%;height:500px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--bg-2)}
+#flow-canvas{width:100%;height:100%}
+.flow-glow{position:absolute;top:50%;left:50%;width:400px;height:400px;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(0,255,200,.06) 0%,transparent 70%);pointer-events:none}
+.hero-terminal{position:absolute;bottom:0;left:0;right:0;background:rgba(7,8,12,.94);border-top:1px solid var(--line);padding:.8rem 1rem;font-family:var(--mono);font-size:.63rem;color:var(--accent);line-height:1.7;max-height:150px;overflow:hidden}
+.hero-terminal .line{opacity:0;animation:typeIn .35s forwards}
+@keyframes typeIn{to{opacity:1}}
+.hero-terminal .warn-line{color:var(--warn)}
+.hero-terminal .ok-line{color:var(--green)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{background:var(--bg-2);padding:2rem 1.5rem;text-align:center}
+.stat-num{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--accent);letter-spacing:-.02em}
+.stat-num.warn{color:var(--warn)}
+.stat-label{font-size:.7rem;color:var(--muted);font-family:var(--mono);margin-top:.3rem;text-transform:uppercase;letter-spacing:.08em}
+
+/* SECTIONS */
+section{padding:5rem 3rem}
+.section-label{font-family:var(--mono);font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.8rem}
+h2{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;letter-spacing:-.02em;margin-bottom:1rem;line-height:1.15}
+.section-sub{color:var(--ink-2);max-width:560px;margin-bottom:3rem;font-size:.95rem}
+
+/* CAPABILITIES */
+.caps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.cap{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:2rem;transition:border-color .3s}
+.cap:hover{border-color:var(--accent)}
+.cap-icon{font-family:var(--mono);font-size:.65rem;font-weight:700;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;margin-bottom:1rem}
+.cap-icon.trace{background:rgba(0,255,200,.1);color:var(--accent)}
+.cap-icon.detect{background:rgba(255,71,87,.1);color:var(--warn)}
+.cap-icon.report{background:rgba(0,180,216,.1);color:var(--accent-2)}
+.cap h3{font-size:1.1rem;font-weight:600;margin-bottom:.6rem}
+.cap p{font-size:.85rem;color:var(--ink-2);line-height:1.6}
+.cap-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem}
+.cap-tag{font-family:var(--mono);font-size:.6rem;color:var(--muted);background:var(--bg);border:1px solid var(--line);padding:.2rem .5rem;border-radius:4px}
+
+/* DEMO INVESTIGATION */
+.demo{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.demo-header{display:flex;align-items:center;gap:.5rem;padding:.8rem 1.2rem;background:var(--surface);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.demo-dot{width:8px;height:8px;border-radius:50%}
+.demo-body{padding:1.5rem;font-family:var(--mono);font-size:.72rem;line-height:1.8;color:var(--ink-2)}
+.demo-body .cmd{color:var(--accent);font-weight:600}
+.demo-body .result{color:var(--ink)}
+.demo-body .warn{color:var(--warn)}
+.demo-body .ok{color:var(--green)}
+.demo-body .muted{color:var(--muted)}
+.demo-body .separator{color:var(--line-2)}
+
+/* ARCHITECTURE */
+.arch{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:2.5rem;overflow-x:auto}
+.arch-grid{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:1rem;align-items:center;min-width:700px}
+.arch-col{display:flex;flex-direction:column;gap:.6rem}
+.arch-box{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;font-family:var(--mono);font-size:.72rem;color:var(--ink-2);text-align:center;transition:all .3s}
+.arch-box.highlight{border-color:var(--accent);box-shadow:0 0 20px rgba(0,255,200,.1);color:var(--ink);background:rgba(0,255,200,.03)}
+.arch-box .label{font-size:.6rem;color:var(--muted);display:block;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.08em}
+.arch-arrow{font-size:1.4rem;color:var(--muted);text-align:center}
+.arch-title{font-family:var(--mono);font-size:.6rem;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:.6rem}
+
+/* RISK LEVELS */
+.risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.risk-card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1.4rem;text-align:center;transition:all .3s}
+.risk-card:hover{transform:translateY(-3px)}
+.risk-card .level{font-family:var(--mono);font-size:1.4rem;font-weight:700;margin-bottom:.3rem}
+.risk-card .level.critical{color:var(--warn)}
+.risk-card .level.high{color:var(--orange)}
+.risk-card .level.medium{color:#ffd93d}
+.risk-card .level.low{color:var(--green)}
+.risk-card .desc{font-size:.75rem;color:var(--muted);line-height:1.5}
+.risk-card .count{font-family:var(--mono);font-size:.65rem;color:var(--ink-2);margin-top:.5rem}
+
+/* WHY MIMO */
+.why{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.why-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1.8rem}
+.why-card .icon{font-size:1.6rem;margin-bottom:.8rem}
+.why-card h3{font-size:.95rem;font-weight:600;margin-bottom:.5rem}
+.why-card p{font-size:.8rem;color:var(--ink-2);line-height:1.6}
+
+/* PROOF */
+.proof-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.proof-card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1.4rem;display:flex;gap:1rem;align-items:flex-start}
+.proof-icon{font-family:var(--mono);font-size:.65rem;font-weight:700;color:var(--bg);background:var(--accent);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0}
+.proof-card h4{font-size:.85rem;font-weight:600;margin-bottom:.25rem}
+.proof-card p{font-size:.75rem;color:var(--muted);line-height:1.5}
+.proof-card a{font-family:var(--mono);font-size:.65rem}
+
+/* CLOSING */
+.closing{text-align:center;padding:4rem 2rem;border-top:1px solid var(--line)}
+.closing h2{font-size:1.8rem;margin-bottom:1rem}
+.closing .links{display:flex;justify-content:center;gap:2rem;margin-top:1.5rem;font-family:var(--mono);font-size:.8rem}
+
+/* FOOTER */
+footer{border-top:1px solid var(--line);padding:1.5rem 3rem;display:flex;justify-content:space-between;font-family:var(--mono);font-size:.65rem;color:var(--muted)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;padding:4rem 1.5rem 2rem}
+  .hero-visual{height:360px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .caps,.why{grid-template-columns:1fr}
+  .risk-grid{grid-template-columns:repeat(2,1fr)}
+  .proof-grid{grid-template-columns:1fr}
+  .arch-grid{grid-template-columns:1fr;min-width:auto}
+  .arch-arrow{transform:rotate(90deg)}
+  section{padding:3rem 1.5rem}
+  .nav-links{display:none}
+}
+@media(max-width:500px){
+  .stats,.risk-grid{grid-template-columns:1fr}
+  .hero-visual{height:280px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">ChainSight <span>v0.1.0</span></div>
+  <div class="nav-links">
+    <a href="#capabilities">Capabilities</a>
+    <a href="#demo">Demo</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#proof">Proof</a>
+  </div>
+  <a href="https://github.com/santuy69/chainsight-landing" class="nav-cta">View Repo</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="eyebrow"><span class="dot"></span> Alert · Suspicious fund flow detected on Base mainnet</div>
+    <h1>See through<br>the <span class="accent">chain</span>.</h1>
+    <p class="hero-lede">ChainSight is an AI-powered blockchain forensics engine. Trace fund flows across 8 chains, detect suspicious patterns in real-time, and generate compliance-grade investigation reports — all through natural language queries.</p>
+    <div class="hero-actions">
+      <a href="https://github.com/santuy69/chainsight-landing" class="btn-primary">View Source →</a>
+      <a href="#demo" class="btn-ghost">See Investigation</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <canvas id="flow-canvas"></canvas>
+    <div class="flow-glow"></div>
+    <div class="hero-terminal" id="hero-terminal"></div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">8</div><div class="stat-label">Chains Monitored</div></div>
+  <div class="stat"><div class="stat-num warn">24</div><div class="stat-label">Alerts / 24h</div></div>
+  <div class="stat"><div class="stat-num">~4s</div><div class="stat-label">Avg Trace Time</div></div>
+  <div class="stat"><div class="stat-num">97%</div><div class="stat-label">Pattern Accuracy</div></div>
+</div>
+
+<!-- CAPABILITIES -->
+<section id="capabilities">
+  <div class="section-label">Core Capabilities</div>
+  <h2>Three modes. One forensic engine.</h2>
+  <p class="section-sub">ChainSight combines fund tracing, pattern detection, and compliance reporting under a single MiMo V2.5 reasoning backbone.</p>
+  <div class="caps">
+    <div class="cap">
+      <div class="cap-icon trace">T</div>
+      <h3>Trace</h3>
+      <p>Follow funds across chains, bridges, mixers, and DEXs. Multi-hop path reconstruction with automatic entity labeling. Ask in English, get a graph.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">fund-flow-tracing</span>
+        <span class="cap-tag">cross-chain-bridges</span>
+        <span class="cap-tag">entity-labeling</span>
+        <span class="cap-tag">address-clustering</span>
+      </div>
+    </div>
+    <div class="cap">
+      <div class="cap-icon detect">D</div>
+      <h3>Detect</h3>
+      <p>Real-time anomaly detection: wash trading, sandwich attacks, rug pulls, flash loan exploits. Pattern library grows with every investigation.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">anomaly-detection</span>
+        <span class="cap-tag">wash-trading</span>
+        <span class="cap-tag">sandwich-attacks</span>
+        <span class="cap-tag">flash-loan-exploits</span>
+      </div>
+    </div>
+    <div class="cap">
+      <div class="cap-icon report">R</div>
+      <h3>Report</h3>
+      <p>Generate compliance-grade investigation reports in natural language. Timeline reconstruction, risk scoring, evidence chain — ready for submission.</p>
+      <div class="cap-tags">
+        <span class="cap-tag">compliance-reports</span>
+        <span class="cap-tag">risk-scoring</span>
+        <span class="cap-tag">timeline-reconstruction</span>
+        <span class="cap-tag">evidence-chain</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section id="demo" style="background:var(--bg-2)">
+  <div class="section-label">Live Investigation</div>
+  <h2>Natural language in. Forensic report out.</h2>
+  <p class="section-sub">ChainSight understands plain English queries and translates them into multi-step on-chain investigations.</p>
+  <div class="demo">
+    <div class="demo-header">
+      <span class="demo-dot" style="background:#ff5f57"></span>
+      <span class="demo-dot" style="background:#febc2e"></span>
+      <span class="demo-dot" style="background:#28c840"></span>
+      <span style="margin-left:.5rem">chainsight — investigation session</span>
+    </div>
+    <div class="demo-body">
+      <div><span class="cmd">$</span> chainsight investigate "Trace the funds from the Base exploit on block 22841990 — where did the stolen ETH end up?"</div>
+      <br>
+      <div class="muted">╭──────────────────────────────────────────────────────────────────╮</div>
+      <div class="muted">│  ChainSight · Investigation Report · CS-2026-0520-001           │</div>
+      <div class="muted">╰──────────────────────────────────────────────────────────────────╯</div>
+      <br>
+      <div class="result"><strong>Target:</strong> 0x742d…35Fa (Exploiter) — Base Mainnet, Block 22841990</div>
+      <div class="result"><strong>Stolen:</strong> 127.4 ETH (~$382,200 at time of exploit)</div>
+      <br>
+      <div class="separator">  ── Fund Flow Trace ────────────────────────────────────────────</div>
+      <br>
+      <div><span class="ok">  ┌─</span> 0x742d…35Fa (Exploiter contract)</div>
+      <div><span class="ok">  │</span>  ├─ <span class="warn">82.1 ETH</span> → Tornado Cash 0.1 ETH pool (14 deposits)</div>
+      <div><span class="ok">  │</span>  ├─ <span class="warn">30.0 ETH</span> → Across Bridge → Ethereum mainnet</div>
+      <div><span class="ok">  │</span>  │   └─ → 0xa1B2…c3D4 (Fresh wallet, created 2h pre-exploit)</div>
+      <div><span class="ok">  │</span>  │       └─ → FixedFloat (instant swap → BTC)</div>
+      <div><span class="ok">  │</span>  └─ <span class="warn">15.3 ETH</span> → Remaining in original contract</div>
+      <br>
+      <div class="separator">  ── Pattern Analysis ───────────────────────────────────────────</div>
+      <br>
+      <div><span class="warn">  ⚠ CONFIDENCE: HIGH</span></div>
+      <div class="result">  • Pre-funded fresh wallet (classic exploit prep pattern)</div>
+      <div class="result">  • Structured Tornado deposits below 0.1 ETH threshold</div>
+      <div class="result">  • Cross-chain bridge used within 4 blocks of exploit</div>
+      <div class="result">  • FixedFloat conversion to BTC (breaking traceability)</div>
+      <br>
+      <div class="separator">  ── Risk Assessment ────────────────────────────────────────────</div>
+      <br>
+      <div class="warn">  RISK LEVEL: CRITICAL (92/100)</div>
+      <div class="result">  Classification: Deliberate exploit with premeditated laundering pipeline</div>
+      <div class="result">  Recommendation: Report to Base security team + flag all associated addresses</div>
+      <br>
+      <div class="muted">  ────────────────────────────────────────────────────────────────</div>
+      <div class="muted">  Model: MiMo V2.5 · Trace depth: 6 hops · Chains: Base + ETH</div>
+      <div class="muted">  Execution: 3.8s · Tokens: 4,200 · Report generated: CS-2026-0520-001.pdf</div>
+    </div>
+  </div>
+</section>
+
+<!-- RISK LEVELS -->
+<section>
+  <div class="section-label">Risk Classification</div>
+  <h2>Four-tier risk scoring</h2>
+  <p class="section-sub">Every address gets a risk score based on behavioral patterns, counterparty analysis, and historical exposure.</p>
+  <div class="risk-grid">
+    <div class="risk-card">
+      <div class="level critical">CRITICAL</div>
+      <div class="desc">Confirmed exploit, hack, or sanctioned entity. Immediate flag.</div>
+      <div class="count">142 addresses flagged</div>
+    </div>
+    <div class="risk-card">
+      <div class="level high">HIGH</div>
+      <div class="desc">Strong indicators: mixer usage, fresh wallet patterns, known scam vectors.</div>
+      <div class="count">1,847 addresses monitored</div>
+    </div>
+    <div class="risk-card">
+      <div class="level medium">MEDIUM</div>
+      <div class="desc">Unusual activity: high-frequency DEX trades, round-trip patterns, dust attacks.</div>
+      <div class="count">12,403 addresses watched</div>
+    </div>
+    <div class="risk-card">
+      <div class="level low">LOW</div>
+      <div class="desc">Clean addresses with verifiable history. Institutional, known DeFi protocols.</div>
+      <div class="count">2.1M addresses classified</div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" style="background:var(--bg-2)">
+  <div class="section-label">System Architecture</div>
+  <h2>MiMo V2.5 — the forensic brain</h2>
+  <p class="section-sub">Investigations require multi-step reasoning across on-chain data, cross-chain bridges, and behavioral heuristics. MiMo handles the entire inference chain.</p>
+  <div class="arch">
+    <div class="arch-grid">
+      <div class="arch-col">
+        <div class="arch-title">Data Sources</div>
+        <div class="arch-box"><span class="label">On-chain</span>EVM RPC · 8 chains · Block explorers</div>
+        <div class="arch-box"><span class="label">Bridges</span>Across · Stargate · Wormhole · LayerZero</div>
+        <div class="arch-box"><span class="label">Mixers</span>Tornado Cash · FixedFloat · Railgun</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-col">
+        <div class="arch-title">Reasoning Core</div>
+        <div class="arch-box highlight"><span class="label">Model</span>MiMo V2.5 — Forensic Inference Engine</div>
+        <div class="arch-box"><span class="label">Query</span>NL → Investigation plan → Tool chain</div>
+        <div class="arch-box"><span class="label">Analysis</span>Pattern match · Risk score · Entity resolve</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-col">
+        <div class="arch-title">Outputs</div>
+        <div class="arch-box"><span class="label">Reports</span>PDF · Markdown · JSON evidence bundle</div>
+        <div class="arch-box"><span class="label">Alerts</span>Real-time · Telegram · Webhook · Email</div>
+        <div class="arch-box"><span class="label">API</span>REST endpoint · Batch investigation · CI/CD</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY MIMO -->
+<section>
+  <div class="section-label">Why MiMo V2.5</div>
+  <h2>The right model for forensic reasoning</h2>
+  <p class="section-sub">Blockchain forensics needs fast, structured, multi-step reasoning across massive transaction graphs. MiMo delivers.</p>
+  <div class="why">
+    <div class="why-card">
+      <div class="icon">🔍</div>
+      <h3>Multi-hop trace reasoning</h3>
+      <p>Following funds through 6+ hops across bridges and mixers requires consistent context. MiMo maintains reasoning chains without losing track of the investigation path.</p>
+    </div>
+    <div class="why-card">
+      <div class="icon">⚡</div>
+      <h3>Real-time alert speed</h3>
+      <p>Suspicious transactions need sub-5-second analysis. MiMo's inference latency enables real-time detection before funds disappear into mixers.</p>
+    </div>
+    <div class="why-card">
+      <div class="icon">📊</div>
+      <h3>Structured report generation</h3>
+      <p>Compliance reports need precise language, accurate numbers, and verifiable evidence chains. MiMo's structured output generates submission-ready documents.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section id="proof" style="background:var(--bg-2)">
+  <div class="section-label">Proof of Operation</div>
+  <h2>Real tools. Real investigations.</h2>
+  <p class="section-sub">ChainSight builds on a proven agent runtime with 100+ operational skills and live on-chain infrastructure.</p>
+  <div class="proof-grid">
+    <div class="proof-card">
+      <div class="proof-icon">GH</div>
+      <div>
+        <h4>Source Repository</h4>
+        <p>MIT-licensed landing page and architecture documentation.</p>
+        <a href="https://github.com/santuy69/chainsight-landing">github.com/santuy69/chainsight-landing →</a>
+      </div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-icon">0x</div>
+      <div>
+        <h4>On-chain Presence</h4>
+        <p>Agent wallet monitoring 8 EVM chains for investigation triggers.</p>
+        <a href="https://etherscan.io/address/0xc086A8aacB0BD742c9E7C3499E07e651298A064c">0xc086…A064c →</a>
+      </div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-icon">SK</div>
+      <div>
+        <h4>100+ Skills</h4>
+        <p>Forensic skills built on a 100-skill agent runtime spanning crypto, research, and automation.</p>
+        <a href="https://github.com/santuy69/0xmissy-alphaops">AlphaOps skill registry →</a>
+      </div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-icon">RT</div>
+      <div>
+        <h4>Runtime Evidence</h4>
+        <p>Terminal proof: skill registry, wallet metadata, agent architecture.</p>
+        <a href="https://github.com/santuy69/chainsight-landing/tree/main/proof">Proof artifacts →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<div class="closing">
+  <h2>Open source. MIT licensed. Built in the open.</h2>
+  <p style="color:var(--ink-2);max-width:520px;margin:0 auto">ChainSight is a blockchain forensics framework powered by MiMo V2.5. Trace, detect, report — see through the chain.</p>
+  <div class="links">
+    <a href="https://github.com/santuy69/chainsight-landing">GitHub</a>
+    <a href="https://github.com/santuy69/0xmissy-alphaops">AlphaOps</a>
+    <a href="https://x.com/0x_Missy22">@0x_Missy22</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>ChainSight v0.1.0 · MIT License</span>
+  <span>Powered by Hermes Agent + MiMo V2.5</span>
+</footer>
+
+<script>
+// ─── FUND FLOW CANVAS ──────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('flow-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  const COLORS = {
+    clean: '#00ffc8',
+    warn: '#ff4757',
+    node: '#4da6ff',
+    mixer: '#ff9f43',
+    bridge: '#00b4d8'
+  };
+
+  // Flow graph nodes
+  let nodes = [];
+  let edges = [];
+  let particles = [];
+
+  function resize(){
+    const r = canvas.parentElement.getBoundingClientRect();
+    W = canvas.width = r.width * devicePixelRatio;
+    H = canvas.height = r.height * devicePixelRatio;
+    canvas.style.width = r.width + 'px';
+    canvas.style.height = r.height + 'px';
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    W = r.width; H = r.height;
+  }
+
+  function init(){
+    nodes = [];
+    edges = [];
+    particles = [];
+    const cx = W/2, cy = H/2;
+
+    // Create flow graph nodes
+    const nodeData = [
+      {x: cx-200, y: cy-80, r: 10, color: COLORS.warn, label: 'Exploiter'},
+      {x: cx-80, y: cy-140, r: 7, color: COLORS.mixer, label: 'Tornado'},
+      {x: cx-80, y: cy-20, r: 7, color: COLORS.bridge, label: 'Across'},
+      {x: cx+40, y: cy-160, r: 6, color: COLORS.node, label: 'Fresh Wallet'},
+      {x: cx+40, y: cy, r: 6, color: COLORS.node, label: '0xa1B2'},
+      {x: cx+160, y: cy-100, r: 5, color: COLORS.clean, label: 'Exit A'},
+      {x: cx+160, y: cy+40, r: 5, color: COLORS.warn, label: 'FixedFloat'},
+      {x: cx+240, y: cy-60, r: 4, color: COLORS.node, label: 'BTC'},
+      {x: cx-200, y: cy+100, r: 8, color: COLORS.node, label: 'Base Chain'},
+      {x: cx+40, y: cy+120, r: 6, color: COLORS.node, label: 'Monitor'},
+    ];
+
+    for(const d of nodeData){
+      nodes.push({...d, vx: 0, vy: 0, origX: d.x, origY: d.y});
+    }
+
+    // Edges (from → to, with amount)
+    edges = [
+      {from: 0, to: 1, color: COLORS.warn, amount: '82.1 ETH'},
+      {from: 0, to: 2, color: COLORS.warn, amount: '30.0 ETH'},
+      {from: 0, to: 9, color: COLORS.node, amount: '15.3 ETH'},
+      {from: 1, to: 3, color: COLORS.mixer, amount: ''},
+      {from: 2, to: 4, color: COLORS.bridge, amount: ''},
+      {from: 3, to: 5, color: COLORS.clean, amount: ''},
+      {from: 4, to: 6, color: COLORS.warn, amount: '→ BTC'},
+      {from: 6, to: 7, color: COLORS.warn, amount: ''},
+      {from: 8, to: 0, color: COLORS.node, amount: 'origin'},
+    ];
+  }
+
+  function spawnParticle(){
+    if(edges.length === 0) return;
+    const e = edges[Math.floor(Math.random() * edges.length)];
+    particles.push({
+      edge: e,
+      t: 0,
+      speed: 0.004 + Math.random() * 0.006,
+      color: e.color,
+      size: 2 + Math.random() * 2
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    const now = Date.now();
+
+    // Draw edges
+    for(const e of edges){
+      const a = nodes[e.from], b = nodes[e.to];
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      // Curved line
+      const mx = (a.x + b.x) / 2 + (Math.sin(now * 0.001) * 5);
+      const my = (a.y + b.y) / 2 - 30;
+      ctx.quadraticCurveTo(mx, my, b.x, b.y);
+      ctx.strokeStyle = e.color + '30';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Amount label
+      if(e.amount){
+        const lx = mx, ly = my - 8;
+        ctx.font = '500 8px JetBrains Mono, monospace';
+        ctx.fillStyle = e.color + '90';
+        ctx.textAlign = 'center';
+        ctx.fillText(e.amount, lx, ly);
+      }
+    }
+
+    // Draw particles along edges
+    for(let i = particles.length - 1; i >= 0; i--){
+      const p = particles[i];
+      p.t += p.speed;
+      if(p.t > 1){ particles.splice(i, 1); continue; }
+
+      const a = nodes[p.edge.from], b = nodes[p.edge.to];
+      const mx = (a.x + b.x) / 2 + (Math.sin(now * 0.001) * 5);
+      const my = (a.y + b.y) / 2 - 30;
+      // Quadratic bezier point
+      const t = p.t;
+      const px = (1-t)*(1-t)*a.x + 2*(1-t)*t*mx + t*t*b.x;
+      const py = (1-t)*(1-t)*a.y + 2*(1-t)*t*my + t*t*b.y;
+
+      ctx.beginPath();
+      ctx.arc(px, py, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.5 + Math.sin(t * Math.PI) * 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Draw nodes
+    for(const n of nodes){
+      // Glow
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 3);
+      grad.addColorStop(0, n.color + '25');
+      grad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = n.color + 'dd';
+      ctx.fill();
+      ctx.strokeStyle = n.color;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Label
+      ctx.font = '500 8px JetBrains Mono, monospace';
+      ctx.fillStyle = n.color;
+      ctx.textAlign = 'center';
+      ctx.fillText(n.label, n.x, n.y + n.r + 13);
+    }
+  }
+
+  function update(){
+    const now = Date.now();
+    // Gentle float
+    for(const n of nodes){
+      n.x = n.origX + Math.sin(now * 0.0008 + n.origX) * 3;
+      n.y = n.origY + Math.cos(now * 0.0006 + n.origY) * 2;
+    }
+    // Spawn particles
+    if(Math.random() < 0.06) spawnParticle();
+  }
+
+  function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+  resize(); init(); loop();
+  window.addEventListener('resize', ()=>{ resize(); init(); });
+})();
+
+// ─── HERO TERMINAL ANIMATION ───────────────────────────────────
+(function(){
+  const el = document.getElementById('hero-terminal');
+  const lines = [
+    {text: '$ chainsight watch --chains base,eth,arb --alert telegram', cls: ''},
+    {text: '  ✓ ChainSight v0.1.0 — AI Blockchain Forensics Engine', cls: 'ok-line'},
+    {text: '  ✓ MiMo V2.5 reasoning backbone connected (latency: 160ms)', cls: 'ok-line'},
+    {text: '  ✓ Monitoring 8 chains · 142 critical addresses · 1,847 high-risk', cls: 'ok-line'},
+    {text: '', cls: ''},
+    {text: '  ⚠ ALERT [Base #22841990] Suspicious: 127.4 ETH drained from 0x742d…', cls: 'warn-line'},
+    {text: '  ⚠ Pattern match: pre-funded fresh wallet + Tornado structured deposits', cls: 'warn-line'},
+    {text: '  → Auto-tracing fund flow across 3 hops (Base → ETH → BTC)…', cls: ''},
+    {text: '  ✓ Report CS-2026-0520-001 generated · Risk: CRITICAL (92/100)', cls: 'ok-line'},
+  ];
+
+  let idx = 0;
+  function addLine(){
+    if(idx >= lines.length) return;
+    const div = document.createElement('div');
+    div.className = 'line' + (lines[idx].cls ? ' ' + lines[idx].cls : '');
+    div.textContent = lines[idx].text;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+    idx++;
+    setTimeout(addLine, lines[idx-1].text === '' ? 150 : 280 + Math.random()*200);
+  }
+  setTimeout(addLine, 1000);
+})();
+</script>
+</body>
+</html>

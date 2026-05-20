@@ -1,0 +1,24 @@
+$ chainsight skills --list | head -20
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│  ChainSight · Forensic Skill Registry · Built on 100+ Hermes Skills         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+  Forensics Skills:
+    ✓ fund-flow-tracing      Multi-hop path reconstruction across chains
+    ✓ entity-labeling         Address → entity resolution (exchanges, mixers)
+    ✓ address-clustering      Group related wallets by behavioral patterns
+    ✓ anomaly-detection       Wash trading, sandwich attacks, rug pulls
+    ✓ cross-chain-bridges     Across, Stargate, Wormhole, LayerZero
+    ✓ compliance-reports      PDF/Markdown investigation reports
+    ✓ risk-scoring            4-tier classification (Critical → Low)
+    ✓ timeline-reconstruction Chronological event sequencing
+
+  Underlying Infrastructure:
+    ✓ 100+ Hermes Agent skills (crypto, research, automation, devops)
+    ✓ 8 EVM chains monitored (ETH, Base, ARB, OP, Polygon, BSC, Sepolia)
+    ✓ Agent wallet: 0xc086…A064c
+    ✓ MiMo V2.5 reasoning backbone
+
+  ────────────────────────────────────────────────────────────────────────────
+  Skills loaded on-demand per investigation. Zero cold-start overhead.
